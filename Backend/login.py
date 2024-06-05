@@ -15,33 +15,57 @@ def login():
     Login route post method
     :return: Json Message, StatusCode
     """
-    #If the request method is post then
-    if request.method == "POST":
-        #gets the username from the request
-        username, password, errorMessage = get_user_password_from_form()
-        if errorMessage:
-            return jsonify({"message": "Bad Request: {}".format(errorMessage)}), 400
-    #Checks username and password against the "database"
-        return check_user_password(username, password)
-    else:
-        return jsonify({"message": "request method must me POST. It was {}".format(request.method)}), 400
+    print(request)
+    try:
+        #If the request method is post then
+        if request.method == "POST":
+            #gets the username from the request
+            content_type = request.content_type
+            if content_type == "application/json":
+                username, password, errorMessage = get_user_password_from_raw()
+            elif "form" in content_type:
+                username, password, errorMessage = get_user_password_from_form()
+            else:
+                raise Exception("Unknown content type")
+            #Throw an exception for invalid content_type for request
+            if errorMessage:
+                return jsonify({"message": "Bad Request: {}".format(errorMessage)}), 400
+        #Checks username and password against the "database"
+            return check_user_password(username, password)
+        else:
+            return jsonify({"message": "request method must me POST. It was {}".format(request.method)}), 400
+    except Exception as e:
+        return jsonify({"other error message": str(e)}), 400
 
 def get_user_password_from_form():
     """
     Get username and password from the request form.
     """
-    success = False
-    try:
 
+    try:
         username = request.form.get("username")
         password = request.form.get("password")
         if username == None or password == None:
             raise Exception("Username or password not provided in the request form.")
         return username, password, None
     except Exception as e:
-        print(e)
         username = request.form.get("username")
         password = request.form.get("password")
+        return username, password, e
+def get_user_password_from_raw():
+    """
+    Get username and password from the raw jspm
+    """
+    try:
+        data = request.get_json()
+        username = data.get("username")
+        password = data.get("password")
+        if username == None or password == None:
+            raise Exception("Username or password not provided in the request form.")
+        return username, password, None
+    except Exception as e:
+        username = data.get("username")
+        password = data.get("password")
         return username, password, e
 
 def check_user_password(username, password):
@@ -74,3 +98,4 @@ def registration_validator(username, password):
 if __name__ == "__main__":
     #Note: Debug mode is True while developing. Need to turn it off in production.
     app.run(debug=True)
+    #app.run(host = '0.0.0.0', port = 5001, debug = True)
