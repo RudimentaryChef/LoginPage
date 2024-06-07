@@ -21,12 +21,7 @@ def login():
         if request.method == "POST":
             #gets the username from the request
             content_type = request.content_type
-            if content_type == "application/json":
-                username, password, errorMessage = get_user_password_from_raw()
-            elif "form" in content_type:
-                username, password, errorMessage = get_user_password_from_form()
-            else:
-                raise Exception("Unknown content type")
+            username, password, errorMessage = get_data_with_content_type(content_type)
             #Throw an exception for invalid content_type for request
             if errorMessage:
                 return jsonify({"message": "Bad Request: {}".format(errorMessage)}), 400
@@ -36,6 +31,14 @@ def login():
             return jsonify({"message": "request method must me POST. It was {}".format(request.method)}), 400
     except Exception as e:
         return jsonify({"other error message": str(e)}), 400
+def get_data_with_content_type(content_type):
+    if content_type == "application/json":
+        username, password, errorMessage = get_user_password_from_raw()
+    elif "form" in content_type:
+        username, password, errorMessage = get_user_password_from_form()
+    else:
+        raise Exception("Unknown content type")
+    return username, password, errorMessage
 
 def get_user_password_from_form():
     """
@@ -83,7 +86,8 @@ def register():
     :return: Json Message, Status code
     """
     if request.method == "POST":
-        username, password, errorMessage = get_user_password_from_form()
+        content_type = request.content_type
+        username, password, errorMessage = get_data_with_content_type(content_type)
         if(errorMessage):
             return jsonify({"message": "Bad Request: {}".format(errorMessage)}), 400
         return registration_validator(username,password)
@@ -97,5 +101,6 @@ def registration_validator(username, password):
         return jsonify({"message": "Registered user sucessfully!"}), 201
 if __name__ == "__main__":
     #Note: Debug mode is True while developing. Need to turn it off in production.
-    app.run(debug=True)
+    #app.run(debug=True)
     #app.run(host = '0.0.0.0', port = 5001, debug = True)
+    app.run(port=8000, debug=True)
