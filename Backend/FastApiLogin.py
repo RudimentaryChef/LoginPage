@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Form, HTTPException
 from werkzeug.security import generate_password_hash, check_password_hash
-
+import uvicorn
 app = FastAPI()
 
 # Sample user base
@@ -34,3 +34,5 @@ def register(username: str = Form(...), password: str = Form(...)):
     else:
         users[username] = generate_password_hash(password)
         return {"message": "Registration successful"}
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
